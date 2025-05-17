@@ -435,6 +435,12 @@ footer a {
     .perritos0 {
         background-position: -34rem;
     }
+    .letra2{
+        font-size: 2.5rem;
+    }
+    .lead {
+        font-size: 1rem;
+    }
     
 }
 @media (max-width: 767px) {
