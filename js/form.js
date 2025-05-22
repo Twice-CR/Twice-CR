@@ -44,7 +44,6 @@ function submitform() {
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
             confirmButtonText: 'Sí, enviar',
-            imageUrl: "img/chaevely.jpeg",
             imageWidth: 200,
             imageHeight: 200,
             imageAlt: "Custom image"
