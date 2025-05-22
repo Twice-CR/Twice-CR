@@ -38,12 +38,12 @@ function submitform() {
 
     if (validar() == false) {
         Swal.fire({
-            title: 'La mismisima Jihyo va revisar este coreo esta seguro?',
-            text: "Despues de darle 'si, enviar', a continuacion checkear que dice 'No soy Robot'",
+            title: 'La mismísima Jihyo va a revisar este correo. ¿Deseás eviarlo?',
+            text: "Después de darle 'Sí, enviar', a continuación checkear la caja que dice 'No soy un robot'",
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
-            confirmButtonText: 'Si, enviar',
+            confirmButtonText: 'Sí, enviar',
             imageUrl: "img/chaevely.jpeg",
             imageWidth: 200,
             imageHeight: 200,
@@ -63,8 +63,8 @@ function submitform() {
     } else {
         Swal.fire({
             icon: 'error',
-            title: 'Error!',
-            text: 'Faltan datos por favor rellenar todos los espacios.',
+            title: '¡Error!',
+            text: 'Faltan datos. Por favor, rellenar todos los espacios.',
         })
     }
 }

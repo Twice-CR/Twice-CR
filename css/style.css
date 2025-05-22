@@ -14,7 +14,6 @@ body {
     position: relative;
     font-family: 'Source Sans Pro', sans-serif;
 }
-
 .letra4 {
     font-size: 1.25rem;
 }
@@ -25,7 +24,7 @@ body {
 
 .letra1 {
     font-family: 'Playfair Display', serif;
-    color: #fe97a4;
+    color: #ffffff;
 }
 
 .letra2 {
@@ -131,7 +130,7 @@ header {
 
 .perritos {
     color: #fff;
-    background: url('../img/bg-huellas2.jpg'), linear-gradient(to right, #dbd25a1f, rgba(235, 23, 8, 0.11));
+    background: url('../img/3093.jpg'), linear-gradient(to right, #dbd25a1f, rgba(235, 23, 8, 0.11));
     background-blend-mode: multiply;
     background-position: center center;
     background-size: cover;
@@ -250,9 +249,9 @@ header {
     font-size: 2rem;
 }
 
-.menos-margin {
+/* .menos-margin {
     margin-top: -70px;
-}
+} */
 
 .btn {
     font-family: 'Playfair Display', serif;
@@ -404,6 +403,17 @@ footer a {
     width: 700px;
     height: 700px;
 }
+.caja{
+    margin-top: 250px;
+    background-color: rgba(0, 0, 0, 0.301);
+}
+.cp-img {
+    text-align: center; 
+    bottom: -100px;
+}
+.cp-img img{
+    height: 400px;
+}
 /* end footer */
 
 @media (max-width: 500px) {
@@ -454,7 +464,29 @@ footer a {
     .eliminar{
         display: none;
     }
-     
+    .perritos{
+        background: url('../img/cell.jpg'), linear-gradient(to right, #dbd25a1f, rgba(235, 23, 8, 0.11));
+        background-blend-mode: multiply;
+        background-position: center center;
+        background-size: cover;
+        width: 100%;
+        height: 65vh;
+        overflow: hidden;
+        box-shadow: inset 0 0 0 1000px rgba(177, 145, 145, 0.13);
+        transition: background 100ms ease-in;
+        z-index: -1;
+    }
+    .caja{
+        margin-top: 40px;
+        background-color: rgba(0, 0, 0, 0.301);
+        position: absolute;
+        bottom: 10px;
+    }
+   .cp-img{
+        height: 400px;
+        bottom: -10px;
+    }
+
 }
 
 @media (max-width: 991px) {
@@ -615,13 +647,6 @@ button:hover {
     color: #007bff;
     transform: scale(1.2);
 }
-.cp-img {
-    text-align: center;
-}
-.cp-img img{
-    height: 400px;
-}
-
 .mi-popup {
     color: white !important;
     border: 2px solid #00ffff !important;
@@ -629,29 +654,85 @@ button:hover {
     background-size: cover !important; 
     background-position: left !important;
     width: 34em !important;
-    
+    align-items: center; 
+}
+.mi-popup h2{
+    color: #ccf4fd !important;
+    margin-left: 160px;
+}
+.mi-popup button{
+    background-color: #fe97a4!important;
+    border: 3px solid #ccf4fd !important;
+}
+
+@media (max-width: 500px) {
+    .padding-text {
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+    .mi-popup h2{
+        font-size: 24px;
+        padding: 0;
+    }
+    .text-popup{
+        padding: 1em 0 0 6em!important;
+        font-size: 18px;
+    }
+}
+@media (max-width: 700px) {
+       .mi-popup h2{
+        margin-left: 1px;
+    }
 }
 .mi-popup div{
-    color: white;
-    margin-left: 30%;
+    color: black;
+    padding: 0;
+    text-align: left;
+    
+}
+.fondo-nayeon {
+    background-image: url('../img/nayeon.png') !important; 
+    background-size: cover !important; 
+    background-position: left !important;
+}.fondo-jeongyeon {
+    background-image: url('../img/jeongyeon.png') !important; 
+    background-size: cover !important; 
+    background-position: left !important;
+}.fondo-momo {
+    background-image: url('../img/momo.png') !important; 
+    background-size: cover !important; 
+    background-position: left !important;
+}.fondo-sana {
+    background-image: url('../img/sana.png') !important; 
+    background-size: cover !important; 
+    background-position: left !important;
+}.fondo-jihyo {
+    background-image: url('../img/jihyo.png') !important; 
+    background-size: cover !important; 
+    background-position: left !important;
+}.fondo-mina {
+    background-image: url('../img/mina.png') !important; 
+    background-size: cover !important; 
+    background-position: left !important;
+}
+.fondo-dahyun {
+    background-image: url('../img/dahyun.png') !important; 
+    background-size: cover !important; 
+    background-position: left !important;
 }
 .fondo-chae {
-    background-image: url('../img/Lovies-09.png') !important; 
-    background-size: cover !important; 
-    background-position: left !important;
-
-}
-
-.fondo-mina {
-    background-image: url('../img/Lovies-12.png') !important; 
+    background-image: url('../img/chaeyoung.png') !important; 
     background-size: cover !important; 
     background-position: left !important;
 }
-
+.fondo-tzuyu {
+    background-image: url('../img/tzuyu.png') !important; 
+    background-size: cover !important; 
+    background-position: left !important;
+}
 .fondo-default {
     background-color: #00acee;
-    background-image: url('../img/chaevely.jpg') !important; 
+    background-image: url('../img/nayeon.png') !important; 
     background-size: cover !important; 
     background-position: left !important;
-
 }

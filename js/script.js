@@ -79,18 +79,34 @@ function searchPoints() {
 	if (result) {
 		let claseFondo = "";
 		if (result.Bias === "Chaeyoung") {
-			claseFondo = "fondo-chae";
+    		claseFondo = "fondo-chae";
 		} else if (result.Bias === "Mina") {
 			claseFondo = "fondo-mina";
+		} else if (result.Bias === "Nayeon") {
+			claseFondo = "fondo-nayeon";
+		} else if (result.Bias === "Jeongyeon") {
+			claseFondo = "fondo-jeongyeon";
+		} else if (result.Bias === "Momo") {
+			claseFondo = "fondo-momo";
+		} else if (result.Bias === "Sana") {
+			claseFondo = "fondo-sana";
+		} else if (result.Bias === "Jihyo") {
+			claseFondo = "fondo-jihyo";
+		} else if (result.Bias === "Dahyun") {
+			claseFondo = "fondo-dahyun";
+		} else if (result.Bias === "Tzuyu") {
+			claseFondo = "fondo-tzuyu";
 		} else {
 			claseFondo = "fondo-default"; // Clase por defecto si no hay coincidencia
 		}
+
 		Swal.fire({
 			title: "Resultados Encontrados",
-			html: `<div" >
+			html: `
+			<div class=''>
 				🍓 Nombre: ${result.Nombre} <br>
-				🍭 Candy Points: ${result.Puntos} <br>
-				⭐ Número Once:${result["Número de Once"]}<br>
+				🍭 CandyPoints: ${result.Puntos} <br>
+				⭐ Número ONCE:${result["Número de Once"]}<br>
 				💓 Bias: ${result.Bias}
 			</div>`,
 			customClass: {
