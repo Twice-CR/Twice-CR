@@ -38,7 +38,7 @@ function submitform() {
 
     if (validar() == false) {
         Swal.fire({
-            title: 'La mismísima Jihyo va a revisar este correo. ¿Deseás eviarlo?',
+            title: 'La mismísima Jihyo va a revisar este correo. ¿Deseás enviarlo?',
             text: "Después de darle 'Sí, enviar', a continuación checkear la caja que dice 'No soy un robot'",
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
