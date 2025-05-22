@@ -103,7 +103,7 @@ function searchPoints() {
 		Swal.fire({
 			title: "Resultados Encontrados",
 			html: `
-			<div class=''>
+			<div class='text-popup'>
 				🍓 Nombre: ${result.Nombre} <br>
 				🍭 CandyPoints: ${result.Puntos} <br>
 				⭐ Número ONCE:${result["Número de Once"]}<br>

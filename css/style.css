@@ -25,6 +25,8 @@ body {
 .letra1 {
     font-family: 'Playfair Display', serif;
     color: #ffffff;
+    padding: 10px 0;
+    
 }
 
 .letra2 {
@@ -678,9 +680,12 @@ button:hover {
         padding: 1em 0 0 6em!important;
         font-size: 18px;
     }
+    h2{
+        font-size: 1.5rem;
+    }
 }
 @media (max-width: 700px) {
-       .mi-popup h2{
+    .mi-popup h2{
         margin-left: 1px;
     }
 }
