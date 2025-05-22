@@ -116,7 +116,7 @@ function searchPoints() {
 		});
 
 	} else {
-		showModal("Correo invalido o no registrado.", "Cualquier duda consultar con un administrador.");
+		showModal("Correo inválido o no registrado.", "Cualquier duda consultar con un administrador.");
 	}
 }
 
