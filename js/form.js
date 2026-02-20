@@ -12,12 +12,12 @@ const validar = () => {
     } else {
         input_nombre.classList.remove('error')
     }
-    if (input_numero.value == '') {
-        input_numero.classList.add('error')
-        error = true
-    } else {
-        input_numero.classList.remove('error')
-    }
+    // if (input_numero.value == '') {
+    //     input_numero.classList.add('error')
+    //     error = true
+    // } else {
+    //     input_numero.classList.remove('error')
+    // }
     if (input_email.value == '') {
         input_email.classList.add('error')
         error = true
@@ -67,3 +67,4 @@ function submitform() {
         })
     }
 }
+
