@@ -1,0 +1,75 @@
+function doPost(e) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSheet();
+
+    let data = {};
+    if (e.postData && e.postData.contents) {
+      try {
+        data = JSON.parse(e.postData.contents);
+      } catch (err) {
+        data = e.parameter || {};
+      }
+    }
+
+    const correo = (data.correo || '').toString().toLowerCase().trim();
+    const gasto = parseFloat(data.gasto) || 0;
+    const compras = (data.compras || '').toString().trim();
+
+    if (!correo) {
+      return ContentService.createTextOutput(JSON.stringify({
+        success: false,
+        mensaje: "Correo vacio"
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const valores = sheet.getDataRange().getValues();
+    const encabezados = valores[0];
+
+    let indexCorreo = -1;
+    let indexGasto = -1;
+    let indexCompras = -1;
+
+    for (let i = 0; i < encabezados.length; i++) {
+      const header = encabezados[i].toString().toLowerCase().trim();
+      if (header === "correo") indexCorreo = i;
+      if (header === "gasto") indexGasto = i;
+      if (header === "compras") indexCompras = i;
+    }
+
+    if (indexCorreo === -1 || indexGasto === -1 || indexCompras === -1) {
+      return ContentService.createTextOutput(JSON.stringify({
+        success: false,
+        mensaje: "No se encontraron las columnas Correo, Gasto o Compras"
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    for (let i = 1; i < valores.length; i++) {
+      const emailEnSheet = valores[i][indexCorreo].toString().toLowerCase().trim();
+      if (emailEnSheet === correo) {
+        const gastoActual = parseFloat(valores[i][indexGasto]) || 0;
+        const gastoNuevo = gastoActual + gasto;
+        sheet.getRange(i + 1, indexGasto + 1).setValue(gastoNuevo);
+
+        const comprasActual = (valores[i][indexCompras] || '').toString().trim();
+        const comprasNuevo = comprasActual ? `${comprasActual} | ${compras}` : compras;
+        sheet.getRange(i + 1, indexCompras + 1).setValue(comprasNuevo);
+
+        return ContentService.createTextOutput(JSON.stringify({
+          success: true,
+          mensaje: "Gasto y compras actualizados"
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      mensaje: "Correo no encontrado"
+    })).setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      mensaje: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}

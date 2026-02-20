@@ -1,0 +1,147 @@
+  /* Carrito flotante */
+        .floating-cart {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+        }
+        
+        .cart-button {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fe97a4 0%, #ff7a96 100%);
+            border: none;
+            color: white;
+            font-size: 28px;
+            box-shadow: 0 4px 15px rgba(254, 151, 164, 0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .cart-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(254, 151, 164, 0.7);
+        }
+        
+        .cart-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            border: 3px solid white;
+        }
+        
+        /* Modal del carrito */
+        .cart-modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .cart-modal-content {
+            position: absolute;
+            right: 0;
+            top: 0;
+            height: 100%;
+            width: 450px;
+            max-width: 90%;
+            background: white;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+            animation: slideInRight 0.3s ease;
+            overflow-y: auto;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        
+        .cart-modal-header {
+            background: linear-gradient(135deg, #fe97a4 0%, #ff7a96 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+        
+        .close-modal:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Mejorar el scroll del carrito */
+        #carritoItems::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #carritoItems::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        #carritoItems::-webkit-scrollbar-thumb {
+            background: #fe97a4;
+            border-radius: 10px;
+        }
+        
+        #carritoItems::-webkit-scrollbar-thumb:hover {
+            background: #ff7a96;
+        }
+
+        @media (max-width: 576px) {
+            .floating-cart {
+                bottom: 20px;
+                right: 20px;
+            }
+            
+            .cart-button {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+            }
+            
+            .cart-modal-content {
+                width: 100%;
+                max-width: 100%;
+            }
+        }
