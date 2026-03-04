@@ -1,5 +1,6 @@
 const sheetURL = "https://docs.google.com/spreadsheets/d/16GrCbqMK0kC2Dma3reW1s8b1CkcC2Nt9Y-FZcExqC48/gviz/tq?tqx=out:csv";
 const inventarioSheetURL = "https://docs.google.com/spreadsheets/d/16GrCbqMK0kC2Dma3reW1s8b1CkcC2Nt9Y-FZcExqC48/gviz/tq?tqx=out:csv&sheet=Inventario";
+const purchaseURL = 'https://script.google.com/macros/s/AKfycbwas60zUXf6NflJDh0TriGh5TVlFgQUc_bgAZ3ITO2dW1hnjHbSGOiOJCGqrIFlCjcK/exec';
 let data = [];
 let puntosActuales = 0;
 let carrito = [];
@@ -244,29 +245,6 @@ function buscarPuntos() {
 }
 
 // Funciones del Carrito
-function obtenerImagenDesdeCard(imagenActual) {
-    if (imagenActual && imagenActual !== 'img/merch.png') {
-        return imagenActual;
-    }
-
-    const elementoActivo = document.activeElement;
-    if (!elementoActivo || !elementoActivo.closest) {
-        return imagenActual;
-    }
-
-    const card = elementoActivo.closest('.card');
-    if (!card) {
-        return imagenActual;
-    }
-
-    const imagenCard = card.querySelector('img.product-image');
-    if (!imagenCard) {
-        return imagenActual;
-    }
-
-    return imagenCard.getAttribute('src') || imagenActual;
-}
-
 function agregarAlCarrito(nombre, precio, imagen, inputId) {
     if (!document.getElementById('correo').value) {
         Swal.fire({
@@ -320,13 +298,11 @@ function agregarAlCarrito(nombre, precio, imagen, inputId) {
         }
     }
 
-    const imagenProducto = obtenerImagenDesdeCard(imagen);
-
     for (let i = 0; i < cantidadAgregar; i++) {
         carrito.push({
             nombre: nombre,
             precio: precio,
-            imagen: imagenProducto,
+            imagen: imagen,
             id: Date.now() + i
         });
     }
@@ -397,6 +373,38 @@ function obtenerCantidadesCarrito() {
     }, {});
 }
 
+function quitarProductosAgotadosDelCarrito(details) {
+    if (!Array.isArray(details) || details.length === 0) {
+        return [];
+    }
+
+    const productosNoDisponibles = details
+        .map((item) => String(item && item.producto ? item.producto : '').trim())
+        .filter((nombre) => nombre.length > 0);
+
+    if (productosNoDisponibles.length === 0) {
+        return [];
+    }
+
+    const objetivos = new Set(productosNoDisponibles.map((nombre) => normalizarNombreProducto(nombre)));
+    const removidos = [];
+
+    carrito = carrito.filter((item) => {
+        const nombreItem = normalizarNombreProducto(item.nombre);
+        if (objetivos.has(nombreItem)) {
+            removidos.push(item.nombre);
+            return false;
+        }
+        return true;
+    });
+
+    if (removidos.length > 0) {
+        actualizarVistaCarrito();
+    }
+
+    return [...new Set(removidos)];
+}
+
 // Funciones para abrir/cerrar el modal del carrito
 function abrirCarrito() {
     document.getElementById('cartModal').style.display = 'block';
@@ -443,7 +451,7 @@ function limpiarCarrito() {
     });
 }
 
-function comprarCarrito() {
+function canjearCarrito() {
     const correo = document.getElementById('correo').value;
 
     if (!correo) {
@@ -459,7 +467,7 @@ function comprarCarrito() {
         Swal.fire({
             icon: 'warning',
             title: 'Carrito vacío',
-            text: 'Agrega productos antes de comprar.'
+            text: 'Agrega productos antes de canjear.'
         });
         return;
     }
@@ -517,7 +525,7 @@ function comprarCarrito() {
         }
 
         Swal.fire({
-            title: '¿Confirmar compra?',
+            title: '¿Confirmar canje?',
             html: `
                 <p><strong>Correo:</strong> ${correo}</p>
                 <p><strong>Modo de entrega:</strong> ${entregaSeleccionada}</p>
@@ -530,11 +538,11 @@ function comprarCarrito() {
                 <p><strong>Puntos restantes:</strong> ${puntosActuales - totalCompra} puntos</p>
             `,
             imageUrl: 'img/escondido.jpg',
-            imageAlt: 'Confirmar compra',
+            imageAlt: 'Confirmar canje',
             imageWidth: 120,
             imageHeight: 120,
             showCancelButton: true,
-            confirmButtonText: 'Confirmar compra',
+            confirmButtonText: 'Confirmar canje',
             cancelButtonText: 'Cancelar'
         }).then((result) => {
             if (result.isConfirmed) {
@@ -607,17 +615,17 @@ function procesarCompraCarrito(correo, totalCompra, resumenItems, cantidadesPorP
     const gastosNum = parseInt(totalCompra) || 0;
     const nuevosPuntos = Math.max(0, puntosNum - gastosNum);
 
-    const appsScriptURL = "https://script.google.com/macros/s/AKfycbwx69HFoYUle-MkzX3z9zORKrrXPJwrJq4C3f49p2EhxPko2Mkea4txdJn-d4gVan5G/exec";
+
 
     // Mostrar popup de espera
     Swal.fire({
-        title: 'Procesando compra...',
+        title: 'Procesando canje...',
         html: '<div style="text-align: center;">'
             + '<img src="img/corriendo.gif" alt="Procesando" style="width: 120px; height: auto; display: block; margin: 0 auto 10px;">'
             + '<div class="loading-dots" style="margin: 10px 0 0;">'
             + '<span></span><span></span><span></span>'
             + '</div>'
-            + '<p style="margin-top: 16px; color: #666;">Por favor espera mientras procesamos tu compra</p>'
+            + '<p style="margin-top: 16px; color: #666;">Por favor espera mientras procesamos tu canje</p>'
             + '</div>',
         icon: null,
         allowOutsideClick: false,
@@ -638,10 +646,9 @@ function procesarCompraCarrito(correo, totalCompra, resumenItems, cantidadesPorP
         }
     });
 
-    // Hacer el fetch
-    fetch(appsScriptURL, {
+    fetch(purchaseURL, {
         method: 'POST',
-        mode: 'no-cors',
+        mode: 'cors',
         body: new URLSearchParams({
             correo: correo,
             gasto: String(-Number(totalCompra)),
@@ -652,11 +659,28 @@ function procesarCompraCarrito(correo, totalCompra, resumenItems, cantidadesPorP
             inventarioColumnaVendido: 'Vendido'
         })
     })
-    .then(() => {
-        // Esperar un momento corto para mostrar el estado de procesamiento
-        return new Promise(resolve => setTimeout(resolve, 600));
+    .then(async (response) => {
+        let payload = null;
+        try {
+            payload = await response.json();
+        } catch (e) {
+            throw new Error('Respuesta inválida del servidor.');
+        }
+
+        if (!response.ok || !payload || payload.ok !== true) {
+            const error = new Error(payload && payload.message ? payload.message : 'No se pudo completar el canje.');
+            error.code = payload && payload.code ? payload.code : null;
+            error.details = payload && payload.details ? payload.details : null;
+            throw error;
+        }
+
+        return payload;
     })
-    .then(() => {
+    .then((payload) => {
+        // Esperar un momento corto para mostrar el estado de procesamiento
+        return new Promise(resolve => setTimeout(() => resolve(payload), 600));
+    })
+    .then((payload) => {
         Object.entries(cantidadesPorProducto).forEach(([nombre, cantidad]) => {
             if (typeof STOCK_LIMITES[nombre] === 'number') {
                 vendidosPorProducto[nombre] = (vendidosPorProducto[nombre] || 0) + cantidad;
@@ -670,11 +694,12 @@ function procesarCompraCarrito(correo, totalCompra, resumenItems, cantidadesPorP
             .join('<br>');
 
         // Actualizar los puntos
-        puntosActuales = nuevosPuntos;
+        const puntosServidor = Number(payload && payload.nuevosPuntos);
+        puntosActuales = Number.isFinite(puntosServidor) ? puntosServidor : nuevosPuntos;
         
         const puntosElement = document.getElementById('puntosUsuario');
         if (puntosElement) {
-            puntosElement.textContent = nuevosPuntos;
+            puntosElement.textContent = puntosActuales;
         }
 
         // Cerrar el modal del carrito
@@ -682,27 +707,45 @@ function procesarCompraCarrito(correo, totalCompra, resumenItems, cantidadesPorP
 
         // Mostrar popup de éxito
         Swal.fire({
-            title: '¡Compra realizada!',
+            title: '¡Canje realizado!',
             html: `
-                <p>Gracias por tu compra, <strong>${correo}</strong>.</p>
+                <p>Gracias por tu canje, <strong>${correo}</strong>.</p>
                 <p><strong>Entrega:</strong> ${entregaSeleccionada}</p>
                 <p><strong>Artículos:</strong><br>${itemsHtml}</p>
                 <p><strong>Puntos gastados:</strong> ${totalCompra}</p>
-                <p><strong>Puntos restantes:</strong> <strong>${nuevosPuntos}</strong></p>
-                <p style="color: green; font-weight: bold;">✓ Actualizado en la base de datos</p>
+                <p><strong>Puntos restantes:</strong> <strong>${puntosActuales}</strong></p>
+                <p style="color: green; font-weight: bold;">✓ Se enviaron los detalles del canje a tu correo</p>
             `,
             icon: 'success'
         });
 
         carrito = [];
         actualizarVistaCarrito();
+        fetchInventario();
     })
     .catch(error => {
         console.error('Error:', error);
+
+        if (error && error.code === 'OUT_OF_STOCK') {
+            const eliminados = quitarProductosAgotadosDelCarrito(error.details);
+            actualizarDisponibilidadCards();
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Canje no completado',
+                text: eliminados.length > 0
+                    ? `${error.message} Se eliminó del carrito: ${eliminados.join(', ')}.`
+                    : error.message
+            });
+            return;
+        }
+
         Swal.fire({
             icon: 'error',
-            title: 'Error de conexión',
-            text: 'No se pudo conectar con el servidor. Intenta de nuevo.'
+            title: 'Canje no completado',
+            text: error && error.message
+                ? error.message
+                : 'No se pudo conectar con Google Apps Script. Verifica que el Web App esté desplegado como "Anyone" y responda JSON.'
         });
     });
 }
@@ -783,6 +826,18 @@ const bannerImagenes = {
                 return;
             }
 
+            if (imgId === 'img-paquete') {
+                img.src = 'img/placeholder.png';
+                actualizarDisponibilidadCards();
+                return;
+            }
+
+            if (imgId === 'img-pines') {
+                img.src = 'img/pines.jpg';
+                actualizarDisponibilidadCards();
+                return;
+            }
+
             if (imgId === 'img-banner') {
                 img.src = bannerImagenes[miembro] || 'img/banner/Nayeon banner .jpg';
                 actualizarDisponibilidadCards();
@@ -793,12 +848,13 @@ const bannerImagenes = {
         function abrirImagenGrande(src, alt) {
             const textoAlt = alt || 'Imagen del producto';
             Swal.fire({
-                html: `<img src="${src}" alt="${textoAlt}" style="display:block;margin:0 auto;max-width:92vw;max-height:80vh;width:auto;height:auto;object-fit:contain;">`,
+                html: `<div style="display:flex;justify-content:center;align-items:center;width:100%;"><img src="${src}" alt="${textoAlt}" style="display:block;max-width:100%;max-height:80vh;width:auto;height:auto;object-fit:contain;"></div>`,
                 showConfirmButton: false,
                 showCloseButton: true,
-                width: '92vw',
-                padding: '0.75rem',
-                backdrop: 'rgba(0, 0, 0, 0.8)'
+                width: '94vw',
+                padding: '0.5rem',
+                backdrop: 'rgba(0, 0, 0, 0.8)',
+                scrollbarPadding: false
             });
         }
 
@@ -820,6 +876,8 @@ const bannerImagenes = {
             window.scrollTo(0, 0);
 
             cambiarFotoProducto('miembro-poster', 'img-poster');
+            cambiarFotoProducto('miembro-paquete', 'img-paquete');
+            cambiarFotoProducto('miembro-pines', 'img-pines');
             cambiarFotoProducto('miembro-stickers', 'img-stickers');
             cambiarFotoProducto('miembro-banner', 'img-banner');
             habilitarZoomImagenes();

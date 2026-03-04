@@ -73,3 +73,255 @@ function doPost(e) {
     })).setMimeType(ContentService.MimeType.JSON);
   }
 }
+repaldo 2
+
+function doPost(e) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+
+  try {
+    const params = getParams_(e);
+
+    const correo = (params.correo || "").trim().toLowerCase();
+    const gasto = Number(params.gasto || 0); // negativo desde frontend (ej: -10)
+    const compras = (params.compras || "").trim();
+    const entrega = (params.entrega || "").trim();
+
+    const inventarioSheetName = (params.inventarioSheet || "Inventario").trim();
+    const inventarioColumnaVendido = (params.inventarioColumnaVendido || "Vendido").trim();
+
+    let vendidos = {};
+    try {
+      vendidos = params.vendidos ? JSON.parse(params.vendidos) : {};
+    } catch (_) {
+      vendidos = {};
+    }
+
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+    // 1) Validar y actualizar Inventario (anti-sobreventa)
+    const invResult = validarYActualizarInventario_(
+      ss,
+      inventarioSheetName,
+      "Stock",
+      inventarioColumnaVendido,
+      vendidos
+    );
+
+    if (!invResult.ok) {
+      return jsonResponse_({
+        ok: false,
+        code: "OUT_OF_STOCK",
+        message: invResult.message,
+        details: invResult.details || null
+      });
+    }
+
+    // 2) Si inventario está OK, actualizar Hoja 1
+    actualizarHojaUsuarios_(ss, correo, gasto, compras, entrega);
+
+    return jsonResponse_({
+      ok: true,
+      message: "Compra procesada",
+      correo: correo
+    });
+  } catch (err) {
+    return jsonResponse_({
+      ok: false,
+      error: String(err)
+    });
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function getParams_(e) {
+  if (!e) return {};
+  const out = {};
+
+  // URLSearchParams
+  if (e.parameter) {
+    Object.keys(e.parameter).forEach((k) => {
+      out[k] = e.parameter[k];
+    });
+  }
+
+  // JSON opcional
+  if (e.postData && e.postData.contents) {
+    const raw = e.postData.contents;
+    const type = (e.postData.type || "").toLowerCase();
+    if (type.indexOf("application/json") !== -1) {
+      try {
+        const parsed = JSON.parse(raw);
+        Object.keys(parsed).forEach((k) => {
+          out[k] = parsed[k];
+        });
+      } catch (_) {}
+    }
+  }
+
+  return out;
+}
+
+function actualizarHojaUsuarios_(ss, correo, gasto, compras, entrega) {
+  const sh = ss.getSheetByName("Hoja 1");
+  if (!sh) return;
+
+  const lastRow = sh.getLastRow();
+  const lastCol = sh.getLastColumn();
+  if (lastRow < 2 || lastCol < 1) return;
+
+  const headers = sh.getRange(1, 1, 1, lastCol).getValues()[0].map(String);
+  const idxCorreo = findHeaderIndex_(headers, "Correo");
+  const idxPuntos = findHeaderIndex_(headers, "Puntos");
+  const idxGasto = findHeaderIndex_(headers, "Gasto");
+  const idxCompras = findHeaderIndex_(headers, "Compras");
+  const idxEntrega = findHeaderIndex_(headers, "Entrega");
+
+  if (idxCorreo === -1) return;
+
+  const correos = sh.getRange(2, idxCorreo + 1, lastRow - 1, 1).getValues();
+  let targetRow = -1;
+
+  for (let i = 0; i < correos.length; i++) {
+    if (String(correos[i][0]).trim().toLowerCase() === correo) {
+      targetRow = i + 2;
+      break;
+    }
+  }
+
+  if (targetRow === -1) return;
+
+  // Puntos acumulados numéricamente
+  if (idxPuntos !== -1 && !isNaN(gasto)) {
+    const cellPuntos = sh.getRange(targetRow, idxPuntos + 1);
+    const actualPuntos = Number(cellPuntos.getValue()) || 0;
+    cellPuntos.setValue(actualPuntos + gasto);
+  }
+
+  // Gasto: historial (no sobreescribe, agrega por línea)
+  if (idxGasto !== -1 && !isNaN(gasto)) {
+    const cellGasto = sh.getRange(targetRow, idxGasto + 1);
+    const gastoAnterior = Number(cellGasto.getValue()) || 0;
+    cellGasto.setValue(gastoAnterior + gasto);
+  }
+
+  // Compras: historial (no sobreescribe)
+  if (idxCompras !== -1 && compras) {
+    const cellCompras = sh.getRange(targetRow, idxCompras + 1);
+    const previoCompras = String(cellCompras.getValue() || "").trim();
+    cellCompras.setValue(previoCompras ? (previoCompras + "\n" + compras) : compras);
+  }
+
+  // Entrega: historial (no sobreescribe)
+  if (idxEntrega !== -1 && entrega) {
+    const cellEntrega = sh.getRange(targetRow, idxEntrega + 1);
+    const previoEntrega = String(cellEntrega.getValue() || "").trim();
+    cellEntrega.setValue(previoEntrega ? (previoEntrega + "\n" + entrega) : entrega);
+  }
+}
+
+/**
+ * Valida stock y actualiza Vendido de forma atómica.
+ * Si no hay stock suficiente, no escribe nada.
+ */
+function validarYActualizarInventario_(ss, sheetName, columnaStock, columnaVendido, vendidos) {
+  const sh = ss.getSheetByName(sheetName);
+  if (!sh) {
+    return { ok: false, message: `No existe la hoja ${sheetName}.` };
+  }
+
+  const lastRow = sh.getLastRow();
+  const lastCol = sh.getLastColumn();
+  if (lastRow < 2 || lastCol < 1) {
+    return { ok: false, message: "Inventario vacío o sin encabezados." };
+  }
+
+  const headers = sh.getRange(1, 1, 1, lastCol).getValues()[0].map(String);
+  const idxProducto = findHeaderIndex_(headers, "Producto");
+  const idxStock = findHeaderIndex_(headers, columnaStock);
+  const idxVendido = findHeaderIndex_(headers, columnaVendido);
+
+  if (idxProducto === -1 || idxStock === -1 || idxVendido === -1) {
+    return {
+      ok: false,
+      message: `Inventario requiere columnas: Producto, ${columnaStock}, ${columnaVendido}.`
+    };
+  }
+
+  const data = sh.getRange(2, 1, lastRow - 1, lastCol).getValues();
+
+  const rowByProducto = {};
+  for (let i = 0; i < data.length; i++) {
+    const nombre = String(data[i][idxProducto] || "").trim().toLowerCase();
+    if (nombre) rowByProducto[nombre] = i + 2;
+  }
+
+  // Validar todo antes de escribir
+  const faltantes = [];
+  const actualizaciones = [];
+
+  Object.keys(vendidos || {}).forEach((producto) => {
+    const qty = Number(vendidos[producto] || 0);
+    if (!producto || !isFinite(qty) || qty <= 0) return;
+
+    const key = String(producto).trim().toLowerCase();
+    const row = rowByProducto[key];
+
+    if (!row) {
+      faltantes.push({ producto, motivo: "No existe en Inventario" });
+      return;
+    }
+
+    const rowValues = sh.getRange(row, 1, 1, lastCol).getValues()[0];
+    const stock = Number(rowValues[idxStock]) || 0;
+    const vendidoActual = Number(rowValues[idxVendido]) || 0;
+    const disponible = stock - vendidoActual;
+
+    if (disponible < qty) {
+      faltantes.push({
+        producto,
+        motivo: "Stock insuficiente",
+        stock: stock,
+        vendido: vendidoActual,
+        solicitado: qty,
+        disponible: disponible
+      });
+      return;
+    }
+
+    actualizaciones.push({
+      row: row,
+      nuevoVendido: vendidoActual + qty
+    });
+  });
+
+  if (faltantes.length > 0) {
+    return {
+      ok: false,
+      message: "No hay stock suficiente para uno o más productos.",
+      details: faltantes
+    };
+  }
+
+  // Escribir si todo validó
+  actualizaciones.forEach((u) => {
+    sh.getRange(u.row, idxVendido + 1).setValue(u.nuevoVendido);
+  });
+
+  return { ok: true };
+}
+
+function findHeaderIndex_(headers, name) {
+  const target = String(name).trim().toLowerCase();
+  for (let i = 0; i < headers.length; i++) {
+    if (String(headers[i]).trim().toLowerCase() === target) return i;
+  }
+  return -1;
+}
+
+function jsonResponse_(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
