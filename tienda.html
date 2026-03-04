@@ -62,7 +62,7 @@
             <div class="position-relative overflow-hidden p-5 text-center tienda-hero">
                 <div class="col-xs-12 col-lg-8 mx-auto">
                     <h1 class="display-4 font-weight-normal letra2 tienda-hero-title">🍭 Tienda Candy Points</h1>
-                    <p class="lead font-weight-normal tienda-hero-subtitle">¡Gasta tus puntos acumulados del 2025 en productos exclusivos!</p>
+                    <p class="lead font-weight-normal tienda-hero-subtitle">¡Canjea los CandyPoints acumulados del 2025 en productos exclusivos hechos por el fanclub!</p>
                 </div>
                
                 <div class="product-device box-shadow d-none d-md-block"></div>
@@ -76,9 +76,9 @@
                         <div class="col-12">
                             <div class="tienda-search-card">
                                 <h2 class="text-center mb-3 tienda-search-title">
-                                    <img src="img/confitonto.png" alt="Confitonto" class="tienda-search-icon">Verifica tus Candy Points
+                                    <img src="img/confitonto.png" alt="Confitonto" class="tienda-search-icon">Verifica tus CandyPoints
                                 </h2>
-                                <p class="text-center mb-4 tienda-search-text">Ingresa tu correo para ver cuántos puntos tienes disponibles antes de cualquier canje.</p>
+                                <p class="text-center mb-4 tienda-search-text">Ingresa tu correo para ver cuántos puntos tienes disponibles antes de cualquier canjeo.</p>
                                 
                                 <div class="search-box d-flex justify-content-center gap-2 mb-3">
                                     <input type="email" class="form-control tienda-search-input" id="correo" placeholder="tu@email.com" required>
@@ -138,7 +138,7 @@
                             </div>
                             <div class="card-body d-flex flex-column">
                                 <h5 class="card-title product-card-title">Photocard de Cumpleaños</h5>
-                                <p class="card-text text-muted product-card-text">Edición especial de photocard Cumpleaños creada por el fanclub. Coleccionable exclusivo.</p>
+                                <p class="card-text text-muted product-card-text">Photocard creada por el fanclub en celebración a los cumpleaños 2025. Coleccionable exclusivo.</p>
                                 <div class="product-select-wrap">
                                     <label class="product-select-label">Selecciona miembro:</label>
                                     <select id="miembro-photocard" class="form-control product-select" onchange="cambiarFotoPhotocard()">
@@ -169,8 +169,8 @@
                                 <img id="img-poster" src="img/posters/Nayeon.JPG" alt="Poster" class="product-image">
                             </div>
                             <div class="card-body d-flex flex-column">
-                                <h5 class="card-title product-card-title">Poster Fanmade</h5>
-                                <p class="card-text text-muted product-card-text">Poster Fanmade del grupo perfectamente impreso. Ideal para decorar tu habitación.</p>
+                                <h5 class="card-title product-card-title">Póster The Story Goes On</h5>
+                                <p class="card-text text-muted product-card-text">Póster hecho por el fanclub a la medida para decorar tu habitación.</p>
                                 <div class="product-select-wrap">
                                     <label class="product-select-label">Selecciona miembro:</label>
                                     <select id="miembro-poster" class="form-control product-select" onchange="cambiarFotoProducto('miembro-poster', 'img-poster')">
@@ -201,8 +201,8 @@
                                 <img id="img-calendario" src="img/calendario.png" alt="Calendario" class="product-image">
                             </div>
                             <div class="card-body d-flex flex-column">
-                                <h5 class="card-title product-card-title">Calendario</h5>
-                                <p class="card-text text-muted product-card-text">Calendario no oficial, diseñado por el Fanclub.</p>
+                                <h5 class="card-title product-card-title">Título: Calendario 2026</h5>
+                                <p class="card-text text-muted product-card-text">Calendario diseñado por el fanclub para anotar todo evento importante para ONCE.</p>
                                 <div class="product-card-meta">
                                     <span class="product-price">45 🍭</span>
                                     <input type="number" id="qty-calendario" class="form-control product-qty" value="1" min="1">
@@ -219,12 +219,12 @@
                                 <img id="img-vip" src="img/vip.png" alt="Paquete VIP" class="product-image">
                             </div>
                             <div class="card-body d-flex flex-column">
-                                <h5 class="card-title product-card-title">Paquete VIP Evento</h5>
-                                <p class="card-text text-muted product-card-text">Paquete VIP para asistir a un evento creado por el FanClub con todo incluido gratis. NO aplica para el evento de la Proyección</p>
+                                <h5 class="card-title product-card-title">Pase VIP</h5>
+                                <p class="card-text text-muted product-card-text">Entrada a uno de nuestros eventos con recuerdo incluido. (Aplicable para picnics, reuniones o cumpleaños. No aplica para evento de la proyección).</p>
                                 <div class="product-card-meta">
                                     <span class="product-price">45 🍭</span>
                                     <input type="number" id="qty-vip" class="form-control product-qty" value="1" min="1">
-                                    <button class="btn btn-outline-secondary btn-negro" onclick="agregarAlCarrito('Paquete VIP Evento', 45, document.getElementById('img-vip').src, 'qty-vip')">Agregar</button>
+                                    <button class="btn btn-outline-secondary btn-negro" onclick="agregarAlCarrito('Pase VIP', 45, document.getElementById('img-vip').src, 'qty-vip')">Agregar</button>
                                 </div>
                             </div>
                         </div>
@@ -482,7 +482,7 @@
                                 <div class="product-card-meta">
                                     <span class="product-price">60 🍭</span>
                                     <input type="number" id="qty-album" class="form-control product-qty" value="1" min="1">
-                                    <button class="btn btn-outline-secondary btn-negro" onclick="agregarAlCarrito('Álbum', 50, document.getElementById('img-album').src, 'qty-album')">Agregar</button>
+                                    <button class="btn btn-outline-secondary btn-negro" onclick="agregarAlCarrito('Álbum', 60, document.getElementById('img-album').src, 'qty-album')">Agregar</button>
                                 </div>
                             </div>
                         </div>
