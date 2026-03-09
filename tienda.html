@@ -268,11 +268,11 @@
                     <div class="col-12 col-md-6 col-lg-4">
                         <div class="card product-card h-100">
                             <div class="card-img-top text-center py-4">
-                                <img id="img-paquete" src="img/placeholder.png" alt="Paquete Cumpleaños" class="product-image">
+                                <img id="img-paquete" src="img/paquete/Nayeon combo.jpg" alt="Paquete Cumpleaños" class="product-image">
                             </div>
                             <div class="card-body d-flex flex-column">
-                                <h5 class="card-title product-card-title">Paquete Cumpleaños</h5>
-                                <p class="card-text text-muted product-card-text">Incluye banner, stickers y photocard.</p>
+                                <h5 class="card-title product-card-title">Paquete de Cumpleaños</h5>
+                                <p class="card-text text-muted product-card-text">Incluye banner, lámina de stickers y photocard del cumpleaños 2025.</p>
                                 <div class="product-select-wrap">
                                     <label class="product-select-label">Selecciona miembro:</label>
                                     <select id="miembro-paquete" class="form-control product-select" onchange="cambiarFotoProducto('miembro-paquete', 'img-paquete')">
@@ -302,8 +302,8 @@
                                 <img id="img-pines" src="img/pines.jpg" alt="Pines" class="product-image">
                             </div>
                             <div class="card-body d-flex flex-column">
-                                <h5 class="card-title product-card-title">Pines cumpleaños</h5>
-                                <p class="card-text text-muted product-card-text">Pines decorativos de cumpleaños.</p>
+                                <h5 class="card-title product-card-title">Pines metálicos de cumpleaños </h5>
+                                <p class="card-text text-muted product-card-text">Incluye un pin metálico de su preferencia: MiChaeng, DaTzu o JeongMoSa.</p>
                                 <div class="product-select-wrap">
                                     <label class="product-select-label">Selecciona miembro:</label>
                                     <select id="miembro-pines" class="form-control product-select">
@@ -496,10 +496,24 @@
                             <div class="card-body d-flex flex-column">
                                 <h5 class="card-title product-card-title">Un Beso de tu bias</h5>
                                 <p class="card-text text-muted product-card-text">Tu bias va viajar a tu pais y darte un besote.</p>
+                                <div class="product-select-wrap">
+                                    <label class="product-select-label">Selecciona miembro:</label>
+                                    <select id="miembro-beso" class="form-control product-select" onchange="cambiarFotoProducto('miembro-beso', 'img-beso')">
+                                        <option value="Nayeon">Nayeon</option>
+                                        <option value="Jeongyeon">Jeongyeon</option>
+                                        <option value="Momo">Momo</option>
+                                        <option value="Sana">Sana</option>
+                                        <option value="Jihyo">Jihyo</option>
+                                        <option value="Mina">Mina</option>
+                                        <option value="Dahyun">Dahyun</option>
+                                        <option value="Chaeyoung">Chaeyoung</option>
+                                        <option value="Tzuyu">Tzuyu</option>
+                                    </select>
+                                </div>
                                 <div class="product-card-meta">
                                     <span class="product-price">999 🍭</span>
                                     <input type="number" id="qty-beso" class="form-control product-qty" value="1" min="1">
-                                    <button class="btn btn-outline-secondary btn-negro" onclick="agregarAlCarrito('Un Beso de tu Bias', 999, document.getElementById('img-beso').src, 'qty-beso')">Agregar</button>
+                                    <button class="btn btn-outline-secondary btn-negro" onclick="agregarAlCarrito('Un Beso de ' + document.getElementById('miembro-beso').value, 999, document.getElementById('img-beso').src, 'qty-beso')">Agregar</button>
                                 </div>
                             </div>
                         </div>
