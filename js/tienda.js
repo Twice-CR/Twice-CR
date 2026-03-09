@@ -264,7 +264,7 @@ function comprarCarrito() {
         }
 
         Swal.fire({
-            title: '¿Confirmar compra?',
+            title: '¿Confirmar canjeo?',
             html: `
                 <p><strong>Correo:</strong> ${correo}</p>
                 <p><strong>Modo de entrega:</strong> ${entregaSeleccionada}</p>
@@ -277,11 +277,11 @@ function comprarCarrito() {
                 <p><strong>Puntos restantes:</strong> ${puntosActuales - totalCompra} puntos</p>
             `,
             imageUrl: 'img/escondido.jpg',
-            imageAlt: 'Confirmar compra',
+            imageAlt: 'Confirmar canjeo',
             imageWidth: 120,
             imageHeight: 120,
             showCancelButton: true,
-            confirmButtonText: 'Confirmar compra',
+            confirmButtonText: 'Confirmar canjeo',
             cancelButtonText: 'Cancelar'
         }).then((result) => {
             if (result.isConfirmed) {
@@ -328,7 +328,7 @@ function solicitarModoEntrega() {
         }
 
         return Swal.fire({
-            title: 'D. Otro metodo',
+            title: 'D. Otro método',
             input: 'text',
             inputPlaceholder: 'Escribe aquí cómo querés recibir tu paquete',
             showCancelButton: true,
@@ -336,7 +336,7 @@ function solicitarModoEntrega() {
             cancelButtonText: 'Cancelar',
             inputValidator: (value) => {
                 if (!String(value || '').trim()) {
-                    return 'Digita el detalle en la opción D. Otro metodo.';
+                    return 'Digita el detalle en la opción D. Otro método.';
                 }
                 return null;
             }
@@ -344,7 +344,7 @@ function solicitarModoEntrega() {
             if (!otroResult.isConfirmed) {
                 return null;
             }
-            return `Otro metodo: ${String(otroResult.value || '').trim()}`;
+            return `Otro método: ${String(otroResult.value || '').trim()}`;
         });
     });
 }
@@ -369,11 +369,11 @@ function procesarCompraCarrito(correo, totalCompra, resumenItems, entregaSelecci
         })
     })
     .then(() => {
-        // Mostrar confirmación de compra exitosa
+        // Mostrar confirmación de canjeo exitoso
         Swal.fire({
-            title: '¡Compra realizada!',
+            title: '¡Canjeo realizado!',
             html: `
-                <p>Gracias por tu compra, <strong>${correo}</strong>.</p>
+                <p>Gracias por tu canjeo, <strong>${correo}</strong>.</p>
                 <p><strong>Entrega:</strong> ${entregaSeleccionada}</p>
                 <p><strong>Artículos:</strong><br>${carrito.map(item => `${item.nombre} (${item.precio}🍭)`).join('<br>')}</p>
                 <p><strong>Puntos gastados:</strong> ${totalCompra}</p>
@@ -394,7 +394,7 @@ function procesarCompraCarrito(correo, totalCompra, resumenItems, entregaSelecci
             carrito = [];
             actualizarVistaCarrito();
 
-            console.log(`Compra registrada en la base de datos para ${correo}`);
+            console.log(`Canjeo registrado en la base de datos para ${correo}`);
         });
     })
     .catch(error => {

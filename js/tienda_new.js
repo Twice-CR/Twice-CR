@@ -1,6 +1,6 @@
 const sheetURL = "https://docs.google.com/spreadsheets/d/16GrCbqMK0kC2Dma3reW1s8b1CkcC2Nt9Y-FZcExqC48/gviz/tq?tqx=out:csv";
 const inventarioSheetURL = "https://docs.google.com/spreadsheets/d/16GrCbqMK0kC2Dma3reW1s8b1CkcC2Nt9Y-FZcExqC48/gviz/tq?tqx=out:csv&sheet=Inventario";
-const purchaseURL = 'https://script.google.com/macros/s/AKfycbwas60zUXf6NflJDh0TriGh5TVlFgQUc_bgAZ3ITO2dW1hnjHbSGOiOJCGqrIFlCjcK/exec';
+const purchaseURL = 'https://script.google.com/macros/s/AKfycbx9Y7UpSOrxIF__hFOnO_ro8RpHIdX0NAqBqwfAyDk5nmWPGw4IchfYGg9sM0neo3Z_/exec';
 let data = [];
 let puntosActuales = 0;
 let carrito = [];
@@ -561,8 +561,7 @@ function solicitarModoEntrega() {
                 <option value="">Selecciona una opción</option>
                 <option value="Futura reunión">A. Futura reunión</option>
                 <option value="Presencial en San José centro">B. Presencial en San José centro</option>
-                <option value="Por envíos">C. Por envíos</option>
-                <option value="Otro metodo">D. Otro metodo</option>
+                <option value="otro">D. Otro método. Especificar: ____</option>
             </select>
         `,
         showCancelButton: true,
@@ -584,7 +583,7 @@ function solicitarModoEntrega() {
             return null;
         }
 
-        if (result.value !== 'Otro metodo') {
+        if (result.value !== 'otro') {
             return result.value;
         }
 
@@ -625,7 +624,7 @@ function procesarCompraCarrito(correo, totalCompra, resumenItems, cantidadesPorP
             + '<div class="loading-dots" style="margin: 10px 0 0;">'
             + '<span></span><span></span><span></span>'
             + '</div>'
-            + '<p style="margin-top: 16px; color: #666;">Por favor espera mientras procesamos tu canje</p>'
+            + '<p style="margin-top: 16px; color: #666;">Por favor espera mientras procesamos tu canjeo</p>'
             + '</div>',
         icon: null,
         allowOutsideClick: false,
@@ -668,7 +667,7 @@ function procesarCompraCarrito(correo, totalCompra, resumenItems, cantidadesPorP
         }
 
         if (!response.ok || !payload || payload.ok !== true) {
-            const error = new Error(payload && payload.message ? payload.message : 'No se pudo completar el canje.');
+            const error = new Error(payload && payload.message ? payload.message : 'No se pudo completar el canjeo.');
             error.code = payload && payload.code ? payload.code : null;
             error.details = payload && payload.details ? payload.details : null;
             throw error;
@@ -705,16 +704,22 @@ function procesarCompraCarrito(correo, totalCompra, resumenItems, cantidadesPorP
         // Cerrar el modal del carrito
         cerrarCarrito();
 
+        const mensajeServidor = String((payload && payload.message) || '');
+        const correoEnviado = !mensajeServidor.toLowerCase().includes('correo no enviado');
+        const estadoCorreoHtml = correoEnviado
+            ? '<p style="color: green; font-weight: bold;">✓ Se enviaron los detalles del canje a tu correo</p>'
+            : '<p style="color: #d48806; font-weight: bold;">⚠ El canje se procesó, pero el correo no se pudo enviar</p>';
+
         // Mostrar popup de éxito
         Swal.fire({
-            title: '¡Canje realizado!',
+            title: '¡Canjeo realizado!',
             html: `
-                <p>Gracias por tu canje, <strong>${correo}</strong>.</p>
+                <p>Gracias por tu canjeo, <strong>${correo}</strong>.</p>
                 <p><strong>Entrega:</strong> ${entregaSeleccionada}</p>
                 <p><strong>Artículos:</strong><br>${itemsHtml}</p>
                 <p><strong>Puntos gastados:</strong> ${totalCompra}</p>
                 <p><strong>Puntos restantes:</strong> <strong>${puntosActuales}</strong></p>
-                <p style="color: green; font-weight: bold;">✓ Se enviaron los detalles del canje a tu correo</p>
+                ${estadoCorreoHtml}
             `,
             icon: 'success'
         });
@@ -731,8 +736,10 @@ function procesarCompraCarrito(correo, totalCompra, resumenItems, cantidadesPorP
             actualizarDisponibilidadCards();
 
             Swal.fire({
-                icon: 'warning',
-                title: 'Canje no completado',
+                title: 'Canjeo no completado',
+                imageUrl: 'img/Llorando.png',
+                imageWidth: 180,
+                imageAlt: 'Canjeo no completado',
                 text: eliminados.length > 0
                     ? `${error.message} Se eliminó del carrito: ${eliminados.join(', ')}.`
                     : error.message
@@ -741,8 +748,10 @@ function procesarCompraCarrito(correo, totalCompra, resumenItems, cantidadesPorP
         }
 
         Swal.fire({
-            icon: 'error',
-            title: 'Canje no completado',
+            title: 'Canjeo no completado',
+            imageUrl: 'img/Llorando.png',
+            imageWidth: 180,
+            imageAlt: 'Canjeo no completado',
             text: error && error.message
                 ? error.message
                 : 'No se pudo conectar con Google Apps Script. Verifica que el Web App esté desplegado como "Anyone" y responda JSON.'
@@ -797,6 +806,30 @@ const bannerImagenes = {
             'tzuyu': 'img/banner/tzuyu.jpg'
         };
 
+const paqueteImagenes = {
+            'nayeon': 'img/paquete/Nayeon combo.jpg',
+            'jeongyeon': 'img/paquete/jeong combo.jpg',
+            'momo': 'img/paquete/momo combo.jpg',
+            'sana': 'img/paquete/sana combo.jpg',
+            'jihyo': 'img/paquete/jihyo combo.jpg',
+            'mina': 'img/paquete/mina combo.jpg',
+            'dahyun': 'img/paquete/dubu combo.jpg',
+            'chaeyoung': 'img/paquete/chae combo.jpg',
+            'tzuyu': 'img/paquete/tzu combo.jpg'
+        };
+
+const besoImagenes = {
+            'nayeon': 'img/Beso/nayeon beso.jpg',
+            'jeongyeon': 'img/Beso/jeongyeon beso.jpg',
+            'momo': 'img/Beso/momo beso.jpg',
+            'sana': 'img/Beso/sana beso.jpg',
+            'jihyo': 'img/Beso/jihyo beso.jpg',
+            'mina': 'img/Beso/mina beso.jpg',
+            'dahyun': 'img/Beso/dubu beso.jpg',
+            'chaeyoung': 'img/Beso/Chae.png',
+            'tzuyu': 'img/Beso/tzuyu beso.jpg'
+        };
+
         function cambiarFotoPhotocard() {
             const miembro = document.getElementById('miembro-photocard').value;
             const img = document.getElementById('img-photocard');
@@ -827,7 +860,7 @@ const bannerImagenes = {
             }
 
             if (imgId === 'img-paquete') {
-                img.src = 'img/placeholder.png';
+                img.src = paqueteImagenes[miembro] || 'img/paquete/Nayeon combo.jpg';
                 actualizarDisponibilidadCards();
                 return;
             }
@@ -840,6 +873,12 @@ const bannerImagenes = {
 
             if (imgId === 'img-banner') {
                 img.src = bannerImagenes[miembro] || 'img/banner/Nayeon banner .jpg';
+                actualizarDisponibilidadCards();
+                return;
+            }
+
+            if (imgId === 'img-beso') {
+                img.src = besoImagenes[miembro] || 'img/Beso/Chae.png';
                 actualizarDisponibilidadCards();
                 return;
             }
@@ -880,6 +919,7 @@ const bannerImagenes = {
             cambiarFotoProducto('miembro-pines', 'img-pines');
             cambiarFotoProducto('miembro-stickers', 'img-stickers');
             cambiarFotoProducto('miembro-banner', 'img-banner');
+            cambiarFotoProducto('miembro-beso', 'img-beso');
             habilitarZoomImagenes();
         });
 
