@@ -1,6 +1,7 @@
 const sheetURL = "https://docs.google.com/spreadsheets/d/16GrCbqMK0kC2Dma3reW1s8b1CkcC2Nt9Y-FZcExqC48/gviz/tq?tqx=out:csv";
 const inventarioSheetURL = "https://docs.google.com/spreadsheets/d/16GrCbqMK0kC2Dma3reW1s8b1CkcC2Nt9Y-FZcExqC48/gviz/tq?tqx=out:csv&sheet=Inventario";
-const purchaseURL = 'https://script.google.com/macros/s/AKfycbx9Y7UpSOrxIF__hFOnO_ro8RpHIdX0NAqBqwfAyDk5nmWPGw4IchfYGg9sM0neo3Z_/exec';
+const purchaseURL = 'https://script.google.com/macros/s/AKfycbw49TUKqpzxrjlqE00mmWtA5VigTtXWzlzB-NUVh9FEe6KNk5xlcWt4PpSggFnRqZfL/exec';
+
 let data = [];
 let puntosActuales = 0;
 let carrito = [];
@@ -250,7 +251,7 @@ function agregarAlCarrito(nombre, precio, imagen, inputId) {
         Swal.fire({
             icon: 'warning',
             title: 'Ingresa tu correo',
-            text: 'Debes ingresar tu correo antes de agregar items al carrito.'
+            text: 'Debes ingresar tu correo antes de agregar productos al carrito.'
         });
         return;
     }
@@ -425,7 +426,7 @@ function limpiarCarrito() {
         Swal.fire({
             icon: 'info',
             title: 'Carrito vacío',
-            text: 'No hay items para eliminar'
+            text: 'No hay productos para eliminar'
         });
         return;
     }
@@ -557,6 +558,7 @@ function solicitarModoEntrega() {
         title: 'Modo de entrega',
         html: `
             <p style="margin-bottom: 12px;"><strong>¿Cómo preferís recibir tus objetos?</strong></p>
+            <p style="margin-bottom: 12px;"><strong>IMPORTANTE! cualquier método escogido será válido después de mayo.</strong></p>
             <select id="modoEntrega" class="swal2-input" style="margin: 0 auto;">
                 <option value="">Selecciona una opción</option>
                 <option value="Futura reunión">A. Futura reunión</option>

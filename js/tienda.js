@@ -355,7 +355,7 @@ function procesarCompraCarrito(correo, totalCompra, resumenItems, entregaSelecci
     const nuevosPuntos = Math.max(0, puntosNum - gastosNum);
 
     // URL del Google Apps Script
-    const appsScriptURL = "https://script.google.com/macros/s/AKfycbwx69HFoYUle-MkzX3z9zORKrrXPJwrJq4C3f49p2EhxPko2Mkea4txdJn-d4gVan5G/exec";
+    const appsScriptURL = "https://script.google.com/macros/s/AKfycbw49TUKqpzxrjlqE00mmWtA5VigTtXWzlzB-NUVh9FEe6KNk5xlcWt4PpSggFnRqZfL/exec";
 
     // Enviar datos a Google Sheet
     fetch(appsScriptURL, {

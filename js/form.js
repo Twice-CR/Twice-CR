@@ -6,6 +6,10 @@ const input_mensaje = document.querySelector('#message')
 
 const validar = () => {
     let error = false
+
+    // El correo es opcional: nunca mostrar borde rojo en ese campo.
+    input_email.classList.remove('error')
+
     if (input_nombre.value == '') {
         input_nombre.classList.add('error')
         error = true
@@ -18,12 +22,7 @@ const validar = () => {
     // } else {
     //     input_numero.classList.remove('error')
     // }
-    if (input_email.value == '') {
-        input_email.classList.add('error')
-        error = true
-    } else {
-        input_email.classList.remove('error')
-    }
+    
     if (input_mensaje.value == '') {
         input_mensaje.classList.add('error')
         error = true
@@ -39,7 +38,7 @@ function submitform() {
     if (validar() == false) {
         Swal.fire({
             title: 'La mismísima Jihyo va a revisar este correo. ¿Deseás enviarlo?',
-            text: "Después de darle 'Sí, enviar', a continuación checkear la caja que dice 'No soy un robot'",
+            text: 'Después de darle "Sí, enviar", se enviará tu mensaje al staff.',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
@@ -63,7 +62,7 @@ function submitform() {
         Swal.fire({
             icon: 'error',
             title: '¡Error!',
-            text: 'Faltan datos. Por favor, rellenar todos los espacios.',
+            text: 'Faltan datos. Por favor, completá nombre y mensaje.',
         })
     }
 }

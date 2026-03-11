@@ -1,0 +1,387 @@
+const SPREADSHEET_ID = '16GrCbqMK0kC2Dma3reW1s8b1CkcC2Nt9Y-FZcExqC48';
+const LOG_SHEET_NAME = 'CanjesLog';
+
+function doPost(e) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+
+  let correo = '';
+  let compras = '';
+  let entrega = '';
+  let gasto = 0;
+
+  try {
+    const params = getParams_(e);
+
+    correo = (params.correo || '').trim().toLowerCase();
+    gasto = Number(params.gasto || 0); // negativo desde frontend
+    compras = (params.compras || '').trim();
+    entrega = (params.entrega || '').trim();
+
+    const inventarioSheetName = (params.inventarioSheet || 'Inventario').trim();
+    const inventarioColumnaVendido = (params.inventarioColumnaVendido || 'Vendido').trim();
+
+    let vendidos = {};
+    try {
+      vendidos = params.vendidos ? JSON.parse(params.vendidos) : {};
+    } catch (_) {
+      vendidos = {};
+    }
+
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+
+    // 1) Validar y actualizar Inventario (anti-sobreventa)
+    const invResult = validarYActualizarInventario_(
+      ss,
+      inventarioSheetName,
+      'Stock',
+      inventarioColumnaVendido,
+      vendidos
+    );
+
+    if (!invResult.ok) {
+      appendCanjeLog_(ss, {
+        correo,
+        gasto,
+        compras,
+        entrega,
+        status: 'RECHAZADO_STOCK',
+        message: invResult.message,
+        details: invResult.details || null
+      });
+
+      return jsonResponse_({
+        ok: false,
+        code: 'OUT_OF_STOCK',
+        message: invResult.message,
+        details: invResult.details || null
+      });
+    }
+
+    // 2) Actualizar Hoja 1
+    const userResult = actualizarHojaUsuarios_(ss, correo, gasto, compras, entrega);
+    if (!userResult.ok) {
+      appendCanjeLog_(ss, {
+        correo,
+        gasto,
+        compras,
+        entrega,
+        status: 'RECHAZADO_USUARIO',
+        message: userResult.message
+      });
+
+      return jsonResponse_({
+        ok: false,
+        code: 'USER_NOT_FOUND',
+        message: userResult.message
+      });
+    }
+
+    // 3) Correo de confirmación (si falla, no rompe canje)
+    let mailError = '';
+    try {
+      enviarCorreoConfirmacion_(correo, compras, entrega, gasto);
+    } catch (errMail) {
+      mailError = String(errMail);
+      Logger.log('Error correo: ' + mailError);
+    }
+
+    appendCanjeLog_(ss, {
+      correo,
+      gasto,
+      compras,
+      entrega,
+      status: mailError ? 'OK_SIN_CORREO' : 'OK',
+      message: mailError ? ('Canje OK, correo falló: ' + mailError) : 'Canje aplicado'
+    });
+
+    return jsonResponse_({
+      ok: true,
+      message: mailError ? 'Canje procesado (correo no enviado).' : 'Canje procesado',
+      correo: correo,
+      nuevosPuntos: userResult.nuevosPuntos
+    });
+
+  } catch (err) {
+    try {
+      const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+      appendCanjeLog_(ss, {
+        correo,
+        gasto,
+        compras,
+        entrega,
+        status: 'ERROR',
+        message: String(err)
+      });
+    } catch (_) {}
+
+    return jsonResponse_({
+      ok: false,
+      code: 'SERVER_ERROR',
+      message: String(err)
+    });
+  } finally {
+    try { lock.releaseLock(); } catch (_) {}
+  }
+}
+
+function getParams_(e) {
+  if (!e) return {};
+  const out = {};
+
+  // URL encoded
+  if (e.parameter) {
+    Object.keys(e.parameter).forEach((k) => {
+      out[k] = e.parameter[k];
+    });
+  }
+
+  // JSON opcional
+  if (e.postData && e.postData.contents) {
+    const raw = e.postData.contents;
+    const type = (e.postData.type || '').toLowerCase();
+    if (type.indexOf('application/json') !== -1) {
+      try {
+        const parsed = JSON.parse(raw);
+        Object.keys(parsed).forEach((k) => {
+          out[k] = parsed[k];
+        });
+      } catch (_) {}
+    }
+  }
+
+  return out;
+}
+
+function actualizarHojaUsuarios_(ss, correo, gasto, compras, entrega) {
+  const sh = ss.getSheetByName('Hoja 1');
+  if (!sh) return { ok: false, message: 'No existe Hoja 1.' };
+
+  const lastRow = sh.getLastRow();
+  const lastCol = sh.getLastColumn();
+  if (lastRow < 2 || lastCol < 1) return { ok: false, message: 'Hoja 1 sin datos.' };
+
+  const headers = sh.getRange(1, 1, 1, lastCol).getValues()[0].map(String);
+  const idxCorreo = findHeaderIndex_(headers, 'Correo');
+  const idxPuntos = findHeaderIndex_(headers, 'Puntos');
+  const idxGasto = findHeaderIndex_(headers, 'Gasto');
+  const idxCompras = findHeaderIndex_(headers, 'Compras');
+  const idxEntrega = findHeaderIndex_(headers, 'Entrega');
+
+  if (idxCorreo === -1) return { ok: false, message: 'No existe columna Correo.' };
+
+  const correos = sh.getRange(2, idxCorreo + 1, lastRow - 1, 1).getValues();
+  let targetRow = -1;
+
+  for (let i = 0; i < correos.length; i++) {
+    if (String(correos[i][0]).trim().toLowerCase() === correo) {
+      targetRow = i + 2;
+      break;
+    }
+  }
+
+  if (targetRow === -1) return { ok: false, message: 'Correo no registrado.' };
+
+  if (idxPuntos !== -1) {
+    // Mantiene la columna Puntos como formula para no sobrescribirla con valores fijos.
+    const cellPuntos = sh.getRange(targetRow, idxPuntos + 1);
+    cellPuntos.setFormula(`=SUM(G${targetRow}:AA${targetRow})`);
+  }
+
+  if (idxGasto !== -1 && !isNaN(gasto)) {
+    const cellGasto = sh.getRange(targetRow, idxGasto + 1);
+    const gastoAnterior = Number(cellGasto.getValue()) || 0;
+    cellGasto.setValue(gastoAnterior + gasto);
+  }
+
+  if (idxCompras !== -1 && compras) {
+    const cellCompras = sh.getRange(targetRow, idxCompras + 1);
+    const previoCompras = String(cellCompras.getValue() || '').trim();
+    cellCompras.setValue(previoCompras ? (previoCompras + '\n' + compras) : compras);
+  }
+
+  if (idxEntrega !== -1 && entrega) {
+    const cellEntrega = sh.getRange(targetRow, idxEntrega + 1);
+    const previoEntrega = String(cellEntrega.getValue() || '').trim();
+    cellEntrega.setValue(previoEntrega ? (previoEntrega + '\n' + entrega) : entrega);
+  }
+
+  SpreadsheetApp.flush();
+
+  let nuevosPuntos = null;
+  if (idxPuntos !== -1) {
+    nuevosPuntos = Number(sh.getRange(targetRow, idxPuntos + 1).getValue()) || 0;
+  }
+
+  return { ok: true, nuevosPuntos };
+}
+
+/**
+ * Valida stock y actualiza Vendido de forma atómica.
+ */
+function validarYActualizarInventario_(ss, sheetName, columnaStock, columnaVendido, vendidos) {
+  const sh = ss.getSheetByName(sheetName);
+  if (!sh) return { ok: false, message: `No existe la hoja ${sheetName}.` };
+
+  const lastRow = sh.getLastRow();
+  const lastCol = sh.getLastColumn();
+  if (lastRow < 2 || lastCol < 1) return { ok: false, message: 'Inventario vacío o sin encabezados.' };
+
+  const headers = sh.getRange(1, 1, 1, lastCol).getValues()[0].map(String);
+  const idxProducto = findHeaderIndex_(headers, 'Producto');
+  const idxStock = findHeaderIndex_(headers, columnaStock);
+  const idxVendido = findHeaderIndex_(headers, columnaVendido);
+
+  if (idxProducto === -1 || idxStock === -1 || idxVendido === -1) {
+    return { ok: false, message: `Inventario requiere columnas: Producto, ${columnaStock}, ${columnaVendido}.` };
+  }
+
+  const data = sh.getRange(2, 1, lastRow - 1, lastCol).getValues();
+
+  const rowByProducto = {};
+  for (let i = 0; i < data.length; i++) {
+    const nombre = String(data[i][idxProducto] || '').trim().toLowerCase();
+    if (nombre) rowByProducto[nombre] = i + 2;
+  }
+
+  const faltantes = [];
+  const actualizaciones = [];
+
+  Object.keys(vendidos || {}).forEach((producto) => {
+    const qty = Number(vendidos[producto] || 0);
+    if (!producto || !isFinite(qty) || qty <= 0) return;
+
+    const key = String(producto).trim().toLowerCase();
+    const row = rowByProducto[key];
+
+    if (!row) {
+      faltantes.push({ producto, motivo: 'No existe en Inventario' });
+      return;
+    }
+
+    const rowValues = sh.getRange(row, 1, 1, lastCol).getValues()[0];
+    const stock = Number(rowValues[idxStock]) || 0;
+    const vendidoActual = Number(rowValues[idxVendido]) || 0;
+    const disponible = stock - vendidoActual;
+
+    if (disponible < qty) {
+      faltantes.push({
+        producto,
+        motivo: 'Stock insuficiente',
+        stock,
+        vendido: vendidoActual,
+        solicitado: qty,
+        disponible
+      });
+      return;
+    }
+
+    actualizaciones.push({ row, nuevoVendido: vendidoActual + qty });
+  });
+
+  if (faltantes.length > 0) {
+    return {
+      ok: false,
+      message: 'No hay stock suficiente para uno o más productos.',
+      details: faltantes
+    };
+  }
+
+  actualizaciones.forEach((u) => {
+    sh.getRange(u.row, idxVendido + 1).setValue(u.nuevoVendido);
+  });
+
+  return { ok: true };
+}
+
+function findHeaderIndex_(headers, name) {
+  const target = String(name).trim().toLowerCase();
+  for (let i = 0; i < headers.length; i++) {
+    if (String(headers[i]).trim().toLowerCase() === target) return i;
+  }
+  return -1;
+}
+
+function jsonResponse_(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ====== LOG ======
+function getOrCreateCanjesLogSheet_(ss) {
+  let sh = ss.getSheetByName(LOG_SHEET_NAME);
+  if (!sh) {
+    sh = ss.insertSheet(LOG_SHEET_NAME);
+    sh.appendRow([
+      'Fecha',
+      'Correo',
+      'Gasto',
+      'Compras',
+      'Entrega',
+      'Estado',
+      'Mensaje',
+      'Detalles(JSON)'
+    ]);
+  }
+  return sh;
+}
+
+function appendCanjeLog_(ss, data) {
+  const sh = getOrCreateCanjesLogSheet_(ss);
+  sh.appendRow([
+    new Date(),
+    data.correo || '',
+    Number(data.gasto || 0),
+    data.compras || '',
+    data.entrega || '',
+    data.status || '',
+    data.message || '',
+    data.details ? JSON.stringify(data.details) : ''
+  ]);
+}
+
+// ====== CORREO ======
+function enviarCorreoConfirmacion_(correo, compras, entrega, gasto) {
+  const totalGastado = Math.abs(Number(gasto) || 0);
+  const imageFileId = '16sr0lifny-jm2Ho4hkO5gyF9LGAxDdal';
+
+  const subject = 'Confirmación de canje - Twice CR';
+  const bodyText =
+`Hola,
+
+Tu canje se procesó correctamente.
+
+Detalle del canje:
+- Correo: ${correo}
+- Artículos: ${compras || 'No especificado'}
+- Entrega: ${entrega || 'No especificado'}
+- Puntos gastados: ${totalGastado}
+
+Si usted no fue la persona que realizó este canje, comuníquese de inmediato con cualquier miembro del staff de Twice CR.
+
+Gracias por apoyar al fanclub 💖
+Twice CR`;
+
+  const imageBlob = DriveApp.getFileById(imageFileId).getBlob();
+
+  MailApp.sendEmail({
+    to: correo,
+    subject: subject,
+    body: bodyText,
+    htmlBody: `
+      <p>Hola,</p>
+      <p>Tu canje se procesó correctamente.</p>
+      <p><strong>Detalle del canje:</strong><br>
+      - Correo: ${correo}<br>
+      - Artículos: ${compras || 'No especificado'}<br>
+      - Entrega: ${entrega || 'No especificado'}<br>
+      - Puntos gastados: ${totalGastado}</p>
+      <p>Si usted no fue la persona que realizó este canje, comuníquese de inmediato con cualquier miembro del staff de Twice CR.</p>
+      <p>Gracias por apoyar al fanclub 💖<br>Twice CR</p>
+      <img src="cid:fotoFinal" width="320" style="width:320px;max-width:320px;height:auto;border-radius:8px;">
+    `,
+    inlineImages: { fotoFinal: imageBlob }
+  });
+}
+
