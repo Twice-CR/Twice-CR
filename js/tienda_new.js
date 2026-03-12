@@ -1,6 +1,8 @@
 const sheetURL = "https://docs.google.com/spreadsheets/d/16GrCbqMK0kC2Dma3reW1s8b1CkcC2Nt9Y-FZcExqC48/gviz/tq?tqx=out:csv";
 const inventarioSheetURL = "https://docs.google.com/spreadsheets/d/16GrCbqMK0kC2Dma3reW1s8b1CkcC2Nt9Y-FZcExqC48/gviz/tq?tqx=out:csv&sheet=Inventario";
 const purchaseURL = 'https://script.google.com/macros/s/AKfycbw49TUKqpzxrjlqE00mmWtA5VigTtXWzlzB-NUVh9FEe6KNk5xlcWt4PpSggFnRqZfL/exec';
+const TIENDA_ACTIVA = false;
+const MENSAJE_TIENDA_PAUSADA = 'La tienda esta temporalmente cerrada. Puedes verla, pero el canje estara habilitado nuevamente en los proximos dias.';
 
 let data = [];
 let puntosActuales = 0;
@@ -10,6 +12,53 @@ let STOCK_LIMITES = {
 };
 
 let vendidosPorProducto = {};
+
+function mostrarAvisoTiendaPausada() {
+    Swal.fire({
+        icon: 'info',
+        title: 'Tienda cerrada',
+        text: MENSAJE_TIENDA_PAUSADA
+    });
+}
+
+function aplicarModoTiendaPausada() {
+    if (TIENDA_ACTIVA) {
+        return;
+    }
+
+    const botonesAgregar = document.querySelectorAll("button[onclick*='agregarAlCarrito(']");
+    botonesAgregar.forEach((boton) => {
+        boton.disabled = true;
+        boton.textContent = 'Cerrada';
+        boton.style.opacity = '0.65';
+        boton.style.cursor = 'not-allowed';
+    });
+
+    const botonesCanje = document.querySelectorAll("button[onclick*='canjearCarrito()']");
+    botonesCanje.forEach((boton) => {
+        boton.disabled = true;
+        boton.style.opacity = '0.65';
+        boton.style.cursor = 'not-allowed';
+    });
+
+    const botonesLimpiar = document.querySelectorAll("button[onclick*='limpiarCarrito()']");
+    botonesLimpiar.forEach((boton) => {
+        boton.disabled = true;
+        boton.style.opacity = '0.65';
+        boton.style.cursor = 'not-allowed';
+    });
+
+    const aviso = document.createElement('div');
+    aviso.className = 'alert alert-warning text-center';
+    aviso.style.maxWidth = '980px';
+    aviso.style.margin = '16px auto 0 auto';
+    aviso.innerHTML = '<strong>Tienda cerrada.</strong> Puedes ver los productos, pero por ahora no se pueden canjear.';
+
+    const hero = document.querySelector('.tienda-hero');
+    if (hero) {
+        hero.appendChild(aviso);
+    }
+}
 
 function normalizarNombreProducto(nombre) {
     return String(nombre || '').trim().toLowerCase();
@@ -84,6 +133,16 @@ function obtenerSelectIdDesdeBoton(boton) {
 
 function actualizarDisponibilidadCards() {
     const botones = document.querySelectorAll("button[onclick*='agregarAlCarrito(']");
+
+    if (!TIENDA_ACTIVA) {
+        botones.forEach((boton) => {
+            boton.disabled = true;
+            boton.textContent = 'Cerrada';
+            boton.style.opacity = '0.65';
+            boton.style.cursor = 'not-allowed';
+        });
+        return;
+    }
 
     botones.forEach((boton) => {
         const nombreProducto = obtenerNombreProductoDesdeBoton(boton);
@@ -205,6 +264,7 @@ async function fetchData() {
 
 function buscarPuntos() {
     const correoInput = document.getElementById('correo');
+    const searchSection = document.querySelector('.tienda-search-section');
     if (!correoInput) {
         console.error('Elemento correo no encontrado');
         return;
@@ -213,6 +273,7 @@ function buscarPuntos() {
     
     if (correo === "") {
         document.getElementById('mensajeBienvenida').style.display = 'none';
+        if (searchSection) searchSection.style.display = '';
         puntosActuales = 0;
         return;
     }
@@ -234,8 +295,10 @@ function buscarPuntos() {
         }
         
         document.getElementById('mensajeBienvenida').style.display = 'block';
+        if (searchSection) searchSection.style.display = 'none';
     } else {
         document.getElementById('mensajeBienvenida').style.display = 'none';
+        if (searchSection) searchSection.style.display = '';
         Swal.fire({
             icon: 'error',
             title: 'No encontrado',
@@ -247,6 +310,11 @@ function buscarPuntos() {
 
 // Funciones del Carrito
 function agregarAlCarrito(nombre, precio, imagen, inputId) {
+    if (!TIENDA_ACTIVA) {
+        mostrarAvisoTiendaPausada();
+        return;
+    }
+
     if (!document.getElementById('correo').value) {
         Swal.fire({
             icon: 'warning',
@@ -453,6 +521,11 @@ function limpiarCarrito() {
 }
 
 function canjearCarrito() {
+    if (!TIENDA_ACTIVA) {
+        mostrarAvisoTiendaPausada();
+        return;
+    }
+
     const correo = document.getElementById('correo').value;
 
     if (!correo) {
@@ -745,6 +818,8 @@ function procesarCompraCarrito(correo, totalCompra, resumenItems, cantidadesPorP
                 text: eliminados.length > 0
                     ? `${error.message} Se eliminó del carrito: ${eliminados.join(', ')}.`
                     : error.message
+            }).then(() => {
+                fetchInventario();
             });
             return;
         }
@@ -757,6 +832,8 @@ function procesarCompraCarrito(correo, totalCompra, resumenItems, cantidadesPorP
             text: error && error.message
                 ? error.message
                 : 'No se pudo conectar con Google Apps Script. Verifica que el Web App esté desplegado como "Anyone" y responda JSON.'
+        }).then(() => {
+            fetchInventario();
         });
     });
 }
@@ -923,6 +1000,7 @@ const besoImagenes = {
             cambiarFotoProducto('miembro-banner', 'img-banner');
             cambiarFotoProducto('miembro-beso', 'img-beso');
             habilitarZoomImagenes();
+            aplicarModoTiendaPausada();
         });
 
 fetchData();
