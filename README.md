@@ -1,4 +1,4 @@
-## web creada por Daniel 👋
+## Hi there 👋
 
 <!--
 **Twice-CR/Twice-CR** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.

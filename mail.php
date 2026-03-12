@@ -1,17 +1,32 @@
 <?php
-$name = $_POST['name'];
-$email = $_POST['email'];
-$phone = $_POST['phone'];
-$message = $_POST['message'];
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header('Location: contactanos.html');
+    exit;
+}
 
-$formcontent=" From: $name \n Celular: $phone \n Mensaje: $message \n Correo: $email";
-$recipient = "daniel1333@outlook.com";
-$subject = "Contact Form";
-$mailheader = "From: $email \r\n";
-mail($recipient, $subject, $formcontent, $mailheader) or die("Error!");
-    echo "<script>
-            window.history.go(-1);
-     </script>";
+$name = trim($_POST['Name'] ?? $_POST['name'] ?? '');
+$email = trim($_POST['Email'] ?? $_POST['email'] ?? '');
+$phone = trim($_POST['Phone'] ?? $_POST['phone'] ?? '');
+$message = trim($_POST['Mensaje'] ?? $_POST['message'] ?? '');
 
+if ($name === '' || $email === '' || $message === '') {
+    header('Location: contactanos.html?status=error');
+    exit;
+}
 
+$safeEmail = filter_var($email, FILTER_SANITIZE_EMAIL);
+$formcontent = "From: $name\nCelular: $phone\nMensaje: $message\nCorreo: $safeEmail";
+$recipient = 'twicecr.once@gmail.com';
+$subject = 'Caja de sugerencias o quejas';
+$mailheader = "From: $safeEmail\r\nReply-To: $safeEmail\r\n";
+
+$sent = mail($recipient, $subject, $formcontent, $mailheader);
+
+if ($sent) {
+    header('Location: contactanos.html?status=ok');
+    exit;
+}
+
+header('Location: contactanos.html?status=error');
+exit;
 ?>
