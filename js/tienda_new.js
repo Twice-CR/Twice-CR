@@ -1,7 +1,7 @@
 const sheetURL = "https://docs.google.com/spreadsheets/d/16GrCbqMK0kC2Dma3reW1s8b1CkcC2Nt9Y-FZcExqC48/gviz/tq?tqx=out:csv";
 const inventarioSheetURL = "https://docs.google.com/spreadsheets/d/16GrCbqMK0kC2Dma3reW1s8b1CkcC2Nt9Y-FZcExqC48/gviz/tq?tqx=out:csv&sheet=Inventario";
 const purchaseURL = 'https://script.google.com/macros/s/AKfycbw49TUKqpzxrjlqE00mmWtA5VigTtXWzlzB-NUVh9FEe6KNk5xlcWt4PpSggFnRqZfL/exec';
-const TIENDA_ACTIVA = false;
+const TIENDA_ACTIVA = true;
 const MENSAJE_TIENDA_PAUSADA = 'La tienda esta temporalmente cerrada. Puedes verla, pero el canje estara habilitado nuevamente en los proximos dias.';
 
 let data = [];
